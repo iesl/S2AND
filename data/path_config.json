@@ -1,4 +1,5 @@
 {
-    "main_data_dir": "absolute path of wherever you downloaded the data to",
+    "_main_data_dir": "absolute path of wherever you downloaded the data to",
+    "main_data_dir": "/home/saunders/projects/the-livingroom/openreview-workspace/openreview-and/ext/s2and-model",
     "internal_data_dir": "don't worry about it unless you work at AI2"
 }

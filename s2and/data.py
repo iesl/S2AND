@@ -200,7 +200,9 @@ class ANDData:
                 )
 
             if unit_of_data_split == "blocks" and not pair_sampling_block:
-                raise Exception("Block-based cluster splits are not compatible with sampling stratgies 0 and 1.")
+                raise Exception(
+                    "Block-based cluster splits are not compatible with sampling stratgies 0 and 1."
+                )
 
             if (clusters is not None and train_pairs is not None) or (
                 clusters is None and train_pairs is None and train_blocks is None
@@ -270,9 +272,15 @@ class ANDData:
                 author_info_name_counts=None,
                 author_info_position=signature["author_info"]["position"],
                 author_info_block=signature["author_info"]["block"],
-                author_info_given_block=signature["author_info"].get("given_block", None),
-                author_info_estimated_gender=signature["author_info"].get("estimated_gender", None),
-                author_info_estimated_ethnicity=signature["author_info"].get("estimated_ethnicity", None),
+                author_info_given_block=signature["author_info"].get(
+                    "given_block", None
+                ),
+                author_info_estimated_gender=signature["author_info"].get(
+                    "estimated_gender", None
+                ),
+                author_info_estimated_ethnicity=signature["author_info"].get(
+                    "estimated_ethnicity", None
+                ),
                 paper_id=signature["paper_id"],
                 sourced_author_source=signature.get("sourced_author_source", None),
                 sourced_author_ids=signature.get("sourced_author_ids", []),
@@ -288,7 +296,9 @@ class ANDData:
         self.specter_embeddings = self.maybe_load_specter(specter_embeddings)
         logger.info("loaded specter, loading cluster seeds")
         cluster_seeds_dict = self.maybe_load_json(cluster_seeds)
-        self.altered_cluster_signatures = self.maybe_load_list(altered_cluster_signatures)
+        self.altered_cluster_signatures = self.maybe_load_list(
+            altered_cluster_signatures
+        )
         self.cluster_seeds_disallow = set()
         self.cluster_seeds_require = {}
         self.max_seed_cluster_id = None
@@ -298,7 +308,9 @@ class ANDData:
                 root_added = False
                 for signature_id_b, constraint_string in values.items():
                     if constraint_string == "disallow":
-                        self.cluster_seeds_disallow.add((signature_id_a, signature_id_b))
+                        self.cluster_seeds_disallow.add(
+                            (signature_id_a, signature_id_b)
+                        )
                     elif constraint_string == "require":
                         if not root_added:
                             self.cluster_seeds_require[signature_id_a] = cluster_num
@@ -327,7 +339,9 @@ class ANDData:
         self.test_pairs_size = test_pairs_size
         self.pair_sampling_block = pair_sampling_block
         self.pair_sampling_balanced_classes = pair_sampling_balanced_classes
-        self.pair_sampling_balanced_homonym_synonym = pair_sampling_balanced_homonym_synonym
+        self.pair_sampling_balanced_homonym_synonym = (
+            pair_sampling_balanced_homonym_synonym
+        )
         self.all_test_pairs_flag = all_test_pairs_flag
         self.random_seed = random_seed
 
@@ -377,9 +391,13 @@ class ANDData:
 
         self.n_jobs = n_jobs
         self.signature_to_block = self.get_signatures_to_block()
-        papers_from_signatures = set([str(signature.paper_id) for signature in self.signatures.values()])
+        papers_from_signatures = set(
+            [str(signature.paper_id) for signature in self.signatures.values()]
+        )
         for paper_id, paper in self.papers.items():
-            self.papers[paper_id] = paper._replace(in_signatures=str(paper_id) in papers_from_signatures)
+            self.papers[paper_id] = paper._replace(
+                in_signatures=str(paper_id) in papers_from_signatures
+            )
         self.preprocess = preprocess
 
         if name_tuples is None:
@@ -392,7 +410,9 @@ class ANDData:
             self.name_tuples = name_tuples
 
         logger.info("preprocessing papers")
-        self.papers = preprocess_papers_parallel(self.papers, self.n_jobs, self.preprocess)
+        self.papers = preprocess_papers_parallel(
+            self.papers, self.n_jobs, self.preprocess
+        )
         logger.info("preprocessed papers")
 
         logger.info("preprocessing signatures")
@@ -400,7 +420,9 @@ class ANDData:
         logger.info("preprocessed signatures")
 
     @staticmethod
-    def get_full_name_for_features(signature: Signature, include_last: bool = True, include_suffix: bool = True) -> str:
+    def get_full_name_for_features(
+        signature: Signature, include_last: bool = True, include_suffix: bool = True
+    ) -> str:
         """
         Creates the full name from the name parts.
 
@@ -417,8 +439,14 @@ class ANDData:
         -------
         string: the full name
         """
-        first = signature.author_info_first_normalized_without_apostrophe or signature.author_info_first
-        middle = signature.author_info_middle_normalized_without_apostrophe or signature.author_info_middle
+        first = (
+            signature.author_info_first_normalized_without_apostrophe
+            or signature.author_info_first
+        )
+        middle = (
+            signature.author_info_middle_normalized_without_apostrophe
+            or signature.author_info_middle
+        )
         last = signature.author_info_last_normalized or signature.author_info_last
         suffix = signature.author_info_suffix_normalized or signature.author_info_suffix
         list_of_parts = [first, middle]
@@ -426,7 +454,11 @@ class ANDData:
             list_of_parts.append(last)
         if include_suffix:
             list_of_parts.append(suffix)
-        name_parts = [part.strip() for part in list_of_parts if part is not None and len(part) != 0]
+        name_parts = [
+            part.strip()
+            for part in list_of_parts
+            if part is not None and len(part) != 0
+        ]
         return " ".join(name_parts)
 
     def preprocess_signatures(self, load_name_counts: bool):
@@ -442,7 +474,9 @@ class ANDData:
         -------
         nothing, modifies self.signatures
         """
-        for signature_id, signature in tqdm(self.signatures.items(), desc="Preprocessing signatures"):
+        for signature_id, signature in tqdm(
+            self.signatures.items(), desc="Preprocessing signatures"
+        ):
             # our normalization scheme is to normalize first and middle separately,
             # join them, then take the first token of the combined join
             first_normalized = normalize_text(signature.author_info_first or "")
@@ -451,39 +485,56 @@ class ANDData:
             )
 
             middle_normalized = normalize_text(signature.author_info_middle or "")
-            first_middle_normalized_split = (first_normalized + " " + middle_normalized).split(" ")
+            first_middle_normalized_split = (
+                first_normalized + " " + middle_normalized
+            ).split(" ")
             if first_middle_normalized_split[0] in NAME_PREFIXES:
                 first_middle_normalized_split = first_middle_normalized_split[1:]
             first_middle_normalized_split_without_apostrophe = (
                 first_normalized_without_apostrophe + " " + middle_normalized
             ).split(" ")
             if first_middle_normalized_split_without_apostrophe[0] in NAME_PREFIXES:
-                first_middle_normalized_split_without_apostrophe = first_middle_normalized_split_without_apostrophe[1:]
+                first_middle_normalized_split_without_apostrophe = (
+                    first_middle_normalized_split_without_apostrophe[1:]
+                )
 
             coauthors: Optional[List[str]] = None
             if len(self.papers) != 0:
                 paper = self.papers[str(signature.paper_id)]
                 coauthors = [
-                    author.author_name for author in paper.authors if author.position != signature.author_info_position
+                    author.author_name
+                    for author in paper.authors
+                    if author.position != signature.author_info_position
                 ]
 
             signature = signature._replace(
                 author_info_first_normalized=first_middle_normalized_split[0],
-                author_info_first_normalized_without_apostrophe=first_middle_normalized_split_without_apostrophe[0],
-                author_info_middle_normalized=" ".join(first_middle_normalized_split[1:]),
+                author_info_first_normalized_without_apostrophe=first_middle_normalized_split_without_apostrophe[
+                    0
+                ],
+                author_info_middle_normalized=" ".join(
+                    first_middle_normalized_split[1:]
+                ),
                 author_info_middle_normalized_without_apostrophe=" ".join(
                     first_middle_normalized_split_without_apostrophe[1:]
                 ),
                 author_info_last_normalized=normalize_text(signature.author_info_last),
-                author_info_suffix_normalized=normalize_text(signature.author_info_suffix or ""),
+                author_info_suffix_normalized=normalize_text(
+                    signature.author_info_suffix or ""
+                ),
                 author_info_coauthors=set(coauthors) if coauthors is not None else None,
-                author_info_coauthor_blocks=set([compute_block(author) for author in coauthors])
+                author_info_coauthor_blocks=set(
+                    [compute_block(author) for author in coauthors]
+                )
                 if coauthors is not None
                 else None,
             )
 
             if self.preprocess:
-                affiliations = [normalize_text(affiliation) for affiliation in signature.author_info_affiliations]
+                affiliations = [
+                    normalize_text(affiliation)
+                    for affiliation in signature.author_info_affiliations
+                ]
                 affiliations_n_grams = get_text_ngrams_words(
                     " ".join(affiliations),
                     AFFILIATIONS_STOP_WORDS,
@@ -491,41 +542,60 @@ class ANDData:
 
                 email_prefix = (
                     signature.author_info_email.split("@")[0]
-                    if signature.author_info_email is not None and len(signature.author_info_email) > 0
+                    if signature.author_info_email is not None
+                    and len(signature.author_info_email) > 0
                     else None
                 )
 
                 if load_name_counts:
                     first_last_for_count = (
-                        signature.author_info_first_normalized + " " + signature.author_info_last_normalized
+                        signature.author_info_first_normalized
+                        + " "
+                        + signature.author_info_last_normalized
                     ).strip()
                     first_initial = (
                         signature.author_info_first_normalized
                         if len(signature.author_info_first_normalized) > 0
                         else ""
                     )
-                    last_first_initial_for_count = (signature.author_info_last_normalized + " " + first_initial).strip()
+                    last_first_initial_for_count = (
+                        signature.author_info_last_normalized + " " + first_initial
+                    ).strip()
                     counts = NameCounts(
-                        first=self.first_dict.get(signature.author_info_first_normalized, 1)
+                        first=self.first_dict.get(
+                            signature.author_info_first_normalized, 1
+                        )
                         if len(signature.author_info_first_normalized) > 1
                         else np.nan,
-                        last=self.last_dict.get(signature.author_info_last_normalized, 1),
+                        last=self.last_dict.get(
+                            signature.author_info_last_normalized, 1
+                        ),
                         first_last=self.first_last_dict.get(first_last_for_count, 1)
                         if len(signature.author_info_first_normalized) > 1
                         else np.nan,
-                        last_first_initial=self.last_first_initial_dict.get(last_first_initial_for_count, 1),
+                        last_first_initial=self.last_first_initial_dict.get(
+                            last_first_initial_for_count, 1
+                        ),
                     )
                 else:
-                    counts = NameCounts(first=None, last=None, first_last=None, last_first_initial=None)
+                    counts = NameCounts(
+                        first=None, last=None, first_last=None, last_first_initial=None
+                    )
 
                 signature = signature._replace(
-                    author_info_full_name=ANDData.get_full_name_for_features(signature).strip(),
+                    author_info_full_name=ANDData.get_full_name_for_features(
+                        signature
+                    ).strip(),
                     author_info_affiliations=affiliations,
                     author_info_affiliations_n_grams=affiliations_n_grams,
-                    author_info_coauthor_n_grams=get_text_ngrams(" ".join(coauthors), stopwords=None, use_bigrams=True)
+                    author_info_coauthor_n_grams=get_text_ngrams(
+                        " ".join(coauthors), stopwords=None, use_bigrams=True
+                    )
                     if coauthors is not None
                     else Counter(),
-                    author_info_email_prefix_ngrams=get_text_ngrams(email_prefix, stopwords=None, use_bigrams=True),
+                    author_info_email_prefix_ngrams=get_text_ngrams(
+                        email_prefix, stopwords=None, use_bigrams=True
+                    ),
                     author_info_name_counts=counts,
                 )
             self.signatures[signature_id] = signature
@@ -552,7 +622,9 @@ class ANDData:
             return path_or_json
 
     @staticmethod
-    def maybe_load_list(path_or_list: Optional[Union[str, list, Set]]) -> Optional[Union[list, Set]]:
+    def maybe_load_list(
+        path_or_list: Optional[Union[str, list, Set]]
+    ) -> Optional[Union[list, Set]]:
         """
         Either loads a list from a text file or passes through the object
 
@@ -572,7 +644,9 @@ class ANDData:
             return path_or_list
 
     @staticmethod
-    def maybe_load_dataframe(path_or_dataframe: Optional[Union[str, pd.DataFrame]]) -> Optional[pd.DataFrame]:
+    def maybe_load_dataframe(
+        path_or_dataframe: Optional[Union[str, pd.DataFrame]]
+    ) -> Optional[pd.DataFrame]:
         """
         Either loads a dataframe from a csv file or passes through the object
 
@@ -591,7 +665,9 @@ class ANDData:
             return path_or_dataframe
 
     @staticmethod
-    def maybe_load_specter(path_or_pickle: Optional[Union[str, Dict]]) -> Optional[Dict]:
+    def maybe_load_specter(
+        path_or_pickle: Optional[Union[str, Dict]]
+    ) -> Optional[Dict]:
         """
         Either loads a dictionary from a pickle file or passes through the object
 
@@ -707,9 +783,15 @@ class ANDData:
         -------
         float: the constraint value
         """
-        first_1 = self.signatures[signature_id_1].author_info_first_normalized_without_apostrophe
-        first_2 = self.signatures[signature_id_2].author_info_first_normalized_without_apostrophe
-        middle_1 = self.signatures[signature_id_1].author_info_middle_normalized_without_apostrophe.split()
+        first_1 = self.signatures[
+            signature_id_1
+        ].author_info_first_normalized_without_apostrophe
+        first_2 = self.signatures[
+            signature_id_2
+        ].author_info_first_normalized_without_apostrophe
+        middle_1 = self.signatures[
+            signature_id_1
+        ].author_info_middle_normalized_without_apostrophe.split()
 
         paper_1 = self.papers[str(self.signatures[signature_id_1].paper_id)]
         paper_2 = self.papers[str(self.signatures[signature_id_2].paper_id)]
@@ -721,13 +803,20 @@ class ANDData:
         ) in self.cluster_seeds_disallow:
             return CLUSTER_SEEDS_LOOKUP["disallow"]
         elif (
-            self.cluster_seeds_require.get(signature_id_1, -1) == self.cluster_seeds_require.get(signature_id_2, -2)
+            self.cluster_seeds_require.get(signature_id_1, -1)
+            == self.cluster_seeds_require.get(signature_id_2, -2)
         ) and (not incremental_dont_use_cluster_seeds):
             return CLUSTER_SEEDS_LOOKUP["require"]
         elif (
             dont_merge_cluster_seeds
-            and (signature_id_1 in self.cluster_seeds_require and signature_id_2 in self.cluster_seeds_require)
-            and (self.cluster_seeds_require[signature_id_1] != self.cluster_seeds_require[signature_id_2])
+            and (
+                signature_id_1 in self.cluster_seeds_require
+                and signature_id_2 in self.cluster_seeds_require
+            )
+            and (
+                self.cluster_seeds_require[signature_id_1]
+                != self.cluster_seeds_require[signature_id_2]
+            )
         ):
             return CLUSTER_SEEDS_LOOKUP["disallow"]
         # just-in-case last name constraint: if last names are different, then disallow
@@ -756,13 +845,31 @@ class ANDData:
             # dont cluster together if there is no intersection between the sets of middle initials
             # and both sets are not empty
             elif len(middle_1) > 0:
-                middle_2 = signature_2.author_info_middle_normalized_without_apostrophe.split()
+                middle_2 = (
+                    signature_2.author_info_middle_normalized_without_apostrophe.split()
+                )
                 if len(middle_2) > 0:
-                    overlapping_affixes = set(middle_2).intersection(middle_1).intersection(DROPPED_AFFIXES)
-                    middle_1_all = [word for word in middle_1 if len(word) > 0 and word not in overlapping_affixes]
-                    middle_2_all = [word for word in middle_2 if len(word) > 0 and word not in overlapping_affixes]
-                    middle_1_words = set([word for word in middle_1_all if len(word) > 1])
-                    middle_2_words = set([word for word in middle_2_all if len(word) > 1])
+                    overlapping_affixes = (
+                        set(middle_2)
+                        .intersection(middle_1)
+                        .intersection(DROPPED_AFFIXES)
+                    )
+                    middle_1_all = [
+                        word
+                        for word in middle_1
+                        if len(word) > 0 and word not in overlapping_affixes
+                    ]
+                    middle_2_all = [
+                        word
+                        for word in middle_2
+                        if len(word) > 0 and word not in overlapping_affixes
+                    ]
+                    middle_1_words = set(
+                        [word for word in middle_1_all if len(word) > 1]
+                    )
+                    middle_2_words = set(
+                        [word for word in middle_2_all if len(word) > 1]
+                    )
                     middle_1_firsts = set([word[0] for word in middle_1_all])
                     middle_2_firsts = set([word[0] for word in middle_2_all])
                     conflicting_initials = (
@@ -876,7 +983,9 @@ class ANDData:
         train/val/test block dictionaries
         """
         blocks = self.get_blocks()
-        assert self.train_ratio + self.val_ratio + self.test_ratio == 1, "train/val/test ratio should add to 1"
+        assert (
+            self.train_ratio + self.val_ratio + self.test_ratio == 1
+        ), "train/val/test ratio should add to 1"
 
         if self.unit_of_data_split == "signatures":
             signature_keys = list(self.signatures.keys())
@@ -915,11 +1024,17 @@ class ANDData:
 
             train_size = int(len(signature_to_year) * self.train_ratio)
             val_size = int(len(signature_to_year) * self.val_ratio)
-            signatures_sorted_by_year = [i[0] for i in (sorted(signature_to_year.items(), key=lambda x: x[1]))]
+            signatures_sorted_by_year = [
+                i[0] for i in (sorted(signature_to_year.items(), key=lambda x: x[1]))
+            ]
 
             train_signatures = signatures_sorted_by_year[0:train_size]
-            val_signatures = signatures_sorted_by_year[train_size : train_size + val_size]
-            test_signatures = signatures_sorted_by_year[train_size + val_size : len(signatures_sorted_by_year)]
+            val_signatures = signatures_sorted_by_year[
+                train_size : train_size + val_size
+            ]
+            test_signatures = signatures_sorted_by_year[
+                train_size + val_size : len(signatures_sorted_by_year)
+            ]
 
             train_block_dict = self.group_signature_helper(train_signatures)
             val_block_dict = self.group_signature_helper(val_signatures)
@@ -973,7 +1088,9 @@ class ANDData:
                 elif block_id in self.test_blocks:
                     test_block_dict[block_id] = signature
 
-        logger.info(f"shuffled train/val/test {len(train_block_dict), len(val_block_dict), len(test_block_dict)}")
+        logger.info(
+            f"shuffled train/val/test {len(train_block_dict), len(val_block_dict), len(test_block_dict)}"
+        )
 
         train_set = set(reduce(lambda x, y: x + y, train_block_dict.values()))  # type: ignore
         val_set = set(reduce(lambda x, y: x + y, val_block_dict.values()))  # type: ignore
@@ -983,7 +1100,9 @@ class ANDData:
         intersection_3 = val_set.intersection(test_set)
         intersection = intersection_1.union(intersection_2).union(intersection_3)
 
-        assert len(intersection) == 0, f"Intersection between train/val/test is {intersection}"
+        assert (
+            len(intersection) == 0
+        ), f"Intersection between train/val/test is {intersection}"
 
         return train_block_dict, val_block_dict, test_block_dict
 
@@ -1016,7 +1135,9 @@ class ANDData:
                     train_signatures.append(signature)
                 else:
                     val_signatures.append(signature)
-            logger.info(f"size of signatures {len(train_signatures), len(val_signatures)}")
+            logger.info(
+                f"size of signatures {len(train_signatures), len(val_signatures)}"
+            )
         else:
             train_signatures = self.train_signatures
             val_signatures = self.val_signatures
@@ -1073,7 +1194,9 @@ class ANDData:
             else []
         )
 
-        test_pairs = self.pair_sampling(self.test_pairs_size, [], test_signatures, self.all_test_pairs_flag)
+        test_pairs = self.pair_sampling(
+            self.test_pairs_size, [], test_signatures, self.all_test_pairs_flag
+        )
 
         return train_pairs, val_pairs, test_pairs
 
@@ -1134,7 +1257,9 @@ class ANDData:
             msk = np.random.rand(len(self.train_pairs)) < train_prob
             train_pairs = list(self.train_pairs[msk].to_records(index=False))
             val_pairs = list(self.train_pairs[~msk].to_records(index=False))
-        self.test_pairs.loc[:, "label"] = self.test_pairs["label"].map({"NO": 0, "YES": 1, "0": 0, 0: 0, "1": 1, 1: 1})
+        self.test_pairs.loc[:, "label"] = self.test_pairs["label"].map(
+            {"NO": 0, "YES": 1, "0": 0, 0: 0, "1": 1, 1: 1}
+        )
         test_pairs = list(self.test_pairs.to_records(index=False))
 
         return train_pairs, val_pairs, test_pairs
@@ -1172,7 +1297,9 @@ class ANDData:
         middle = self.signatures[signature_id].author_info_middle
         last = self.signatures[signature_id].author_info_last
         suffix = self.signatures[signature_id].author_info_suffix
-        name_parts = [part.strip() for part in [first, middle, last, suffix] if part is not None]
+        name_parts = [
+            part.strip() for part in [first, middle, last, suffix] if part is not None
+        ]
         return " ".join(name_parts)
 
     def pair_sampling(
@@ -1239,7 +1366,10 @@ class ANDData:
                             same_name_different_cluster.append((s1, s2, 0))
                         else:
                             different_name_different_cluster.append((s1, s2, 0))
-        elif not self.pair_sampling_balanced_homonym_synonym and not self.pair_sampling_balanced_classes:
+        elif (
+            not self.pair_sampling_balanced_homonym_synonym
+            and not self.pair_sampling_balanced_classes
+        ):
             for _, signatures in blocks.items():
                 for i, s1 in enumerate(signatures):
                     for s2 in signatures[i + 1 :]:
@@ -1327,7 +1457,11 @@ def preprocess_paper_1(item: Tuple[str, Paper]) -> Tuple[str, Paper]:
 
     if paper.in_signatures:
         is_reliable, is_english, predicted_language = detect_language(paper.title)
-        paper = paper._replace(is_english=is_english, predicted_language=predicted_language, is_reliable=is_reliable)
+        paper = paper._replace(
+            is_english=is_english,
+            predicted_language=predicted_language,
+            is_reliable=is_reliable,
+        )
     title = normalize_text(paper.title)
     title_ngrams_words = get_text_ngrams_words(title)
     authors = [
@@ -1337,7 +1471,9 @@ def preprocess_paper_1(item: Tuple[str, Paper]) -> Tuple[str, Paper]:
         )
         for author in paper.authors
     ]
-    paper = paper._replace(title=title, title_ngrams_words=title_ngrams_words, authors=authors)
+    paper = paper._replace(
+        title=title, title_ngrams_words=title_ngrams_words, authors=authors
+    )
 
     if global_preprocess:  # type: ignore
         venue = normalize_text(paper.venue)
@@ -1345,8 +1481,12 @@ def preprocess_paper_1(item: Tuple[str, Paper]) -> Tuple[str, Paper]:
         paper = paper._replace(venue=venue, journal_name=journal_name)
         if paper.in_signatures:
             title_ngrams_chars = get_text_ngrams(paper.title, use_bigrams=True)
-            venue_ngrams = get_text_ngrams(paper.venue, stopwords=VENUE_STOP_WORDS, use_bigrams=True)
-            journal_ngrams = get_text_ngrams(paper.journal_name, stopwords=VENUE_STOP_WORDS, use_bigrams=True)
+            venue_ngrams = get_text_ngrams(
+                paper.venue, stopwords=VENUE_STOP_WORDS, use_bigrams=True
+            )
+            journal_ngrams = get_text_ngrams(
+                paper.journal_name, stopwords=VENUE_STOP_WORDS, use_bigrams=True
+            )
             paper = paper._replace(
                 title_ngrams_chars=title_ngrams_chars,
                 venue_ngrams=venue_ngrams,
@@ -1374,7 +1514,9 @@ def preprocess_paper_2(item: Tuple[str, Paper, List[MiniPaper]]) -> Tuple[str, P
 
     titles = " ".join(filter(None, [paper.title for paper in reference_papers]))
     venues = " ".join(filter(None, [paper.venue for paper in reference_papers]))
-    journals = " ".join(filter(None, [paper.journal_name for paper in reference_papers]))
+    journals = " ".join(
+        filter(None, [paper.journal_name for paper in reference_papers])
+    )
 
     authors: List[str] = list(
         filter(
@@ -1388,7 +1530,9 @@ def preprocess_paper_2(item: Tuple[str, Paper, List[MiniPaper]]) -> Tuple[str, P
         get_text_ngrams(names.strip(), use_bigrams=True, stopwords=None),
         get_text_ngrams(titles, use_bigrams=True),
         get_text_ngrams(
-            venues + " " + journals if venues != journals else venues, stopwords=VENUE_STOP_WORDS, use_bigrams=True
+            venues + " " + journals if venues != journals else venues,
+            stopwords=VENUE_STOP_WORDS,
+            use_bigrams=True,
         ),
         Counter(blocks),
     )
@@ -1397,7 +1541,9 @@ def preprocess_paper_2(item: Tuple[str, Paper, List[MiniPaper]]) -> Tuple[str, P
     return (key, paper)
 
 
-def preprocess_papers_parallel(papers_dict: Dict, n_jobs: int, preprocess: bool) -> Dict:
+def preprocess_papers_parallel(
+    papers_dict: Dict, n_jobs: int, preprocess: bool
+) -> Dict:
     """
     helper function to preprocess papers
 
@@ -1426,7 +1572,9 @@ def preprocess_papers_parallel(papers_dict: Dict, n_jobs: int, preprocess: bool)
                     output[key] = value
                     pbar.update()
     else:
-        for item in tqdm(papers_dict.items(), total=len(papers_dict), desc="Preprocessing papers 1/2"):
+        for item in tqdm(
+            papers_dict.items(), total=len(papers_dict), desc="Preprocessing papers 1/2"
+        ):
             result = preprocess_paper_1(item)
             output[result[0]] = result[1]
 
@@ -1445,7 +1593,10 @@ def preprocess_papers_parallel(papers_dict: Dict, n_jobs: int, preprocess: bool)
                     for paper in list(
                         filter(
                             None,
-                            [output.get(str(ref_id), None) for ref_id in value.references],
+                            [
+                                output.get(str(ref_id), None)
+                                for ref_id in value.references
+                            ],
                         )
                     )
                 ]
@@ -1462,7 +1613,9 @@ def preprocess_papers_parallel(papers_dict: Dict, n_jobs: int, preprocess: bool)
                         output[key] = value
                         pbar.update()
         else:
-            for item in tqdm(input_2, total=len(input_2), desc="Preprocessing papers 2/2"):
+            for item in tqdm(
+                input_2, total=len(input_2), desc="Preprocessing papers 2/2"
+            ):
                 result = preprocess_paper_2(item)
                 output[result[0]] = result[1]
 
