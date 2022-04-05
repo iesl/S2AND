@@ -10,26 +10,17 @@ testpaths = [
 
 [tool.pyright]
 
-include = ["s2and"]
+include = ["s2and/*"]
 exclude = [
         "**/__pycache__"
         ]
-ignore = []
-
-# stubPath = "src/stubs"
-# venv = "env367"
+ignore = ["data", "scripts", "s2and.egg-info"]
 
 useLibraryCodeForTypes = true
 typeCheckingMode = "basic" # vs strict/none
 
-# pythonVersion = "3.9"
-# pythonPlatform = "Linux"
 
 executionEnvironments = [
-                      # { root = "src/web", pythonVersion = "3.5", pythonPlatform = "Windows", extraPaths = [ "src/service_libs" ] },
-                      # { root = "src/sdk", pythonVersion = "3.0", extraPaths = [ "src/backend" ] },
-                      # { root = "src/tests", extraPaths = ["src/tests/e2e", "src/sdk" ]},
-                      # { root = "src" }
 ]
 
 ### https://github.com/microsoft/pyright/blob/main/docs/configuration.md#diagnostic-rule-defaults

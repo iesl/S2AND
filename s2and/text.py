@@ -1,7 +1,4 @@
-from typing import List, Union, Optional, Set, TYPE_CHECKING
-
-# if TYPE_CHECKING:
-#     from s2and.data import NameCounts
+from typing import List, Union, Optional, Set
 
 from s2and.data import NameCounts
 
@@ -261,9 +258,7 @@ NAME_PREFIXES = {
 def prefix_dist(string_1: str, string_2: str) -> float:
     if string_1 == string_2:
         return 0.0
-    min_word, max_word = (
-        (string_1, string_2) if len(string_1) < len(string_2) else (string_2, string_1)
-    )
+    min_word, max_word = (string_1, string_2) if len(string_1) < len(string_2) else (string_2, string_1)
     min_len = len(min_word)
     for i in range(min_len, 0, -1):
         if min_word[:i] == max_word[:i]:
@@ -438,13 +433,7 @@ def get_text_ngrams(
         return Counter()
 
     if stopwords is not None:
-        text = " ".join(
-            [
-                word
-                for word in text.split(" ")
-                if word not in stopwords and len(word) > 2
-            ]
-        )
+        text = " ".join([word for word in text.split(" ") if word not in stopwords and len(word) > 2])
 
     unigrams = []  # type: ignore
     if use_unigrams:
@@ -466,15 +455,11 @@ def get_text_ngrams(
         lambda x: "".join(x),
         filter(lambda x: " " not in x, zip(text, text[1:], text[2:], text[3:])),
     )
-    ngrams = (
-        Counter(unigrams) | Counter(bigrams) | Counter(trigrams) | Counter(quadgrams)
-    )
+    ngrams = Counter(unigrams) | Counter(bigrams) | Counter(trigrams) | Counter(quadgrams)
     return ngrams
 
 
-def get_text_ngrams_words(
-    text: Optional[str], stopwords: Set[str] = STOPWORDS
-) -> Counter:
+def get_text_ngrams_words(text: Optional[str], stopwords: Set[str] = STOPWORDS) -> Counter:
     """
     Get word unigrams, bigrams, and trigrams for a piece of text.
 
@@ -491,9 +476,7 @@ def get_text_ngrams_words(
     """
     if text is None or len(text) == 0:
         return Counter()
-    text_split = [
-        word for word in text.split() if word not in stopwords and len(word) > 1
-    ]
+    text_split = [word for word in text.split() if word not in stopwords and len(word) > 1]
     unigrams = Counter(text_split)
     bigrams = map(
         lambda x: " ".join(x),
@@ -688,9 +671,7 @@ def compute_block(name: str) -> str:
     return block
 
 
-def diff(
-    value_1: Optional[float], value_2: Optional[float], default_val: float = NUMPY_NAN
-) -> float:
+def diff(value_1: Optional[float], value_2: Optional[float], default_val: float = NUMPY_NAN) -> float:
     """
     Compute absolute difference between two values.
 
@@ -753,8 +734,6 @@ def name_counts(
     with warnings.catch_warnings():
         # np.max of 2 nans causes annoying warnings
         warnings.simplefilter("ignore", category=RuntimeWarning)
-        counts_min_max = list(np.nanmin(counts, axis=0)) + list(
-            np.max([counts[0][:2], counts[1][:2]], axis=0)
-        )
+        counts_min_max = list(np.nanmin(counts, axis=0)) + list(np.max([counts[0][:2], counts[1][:2]], axis=0))
 
     return counts_min_max
