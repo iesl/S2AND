@@ -3,6 +3,7 @@ from typing import Tuple, List, Union, Dict, Callable, Any, Optional
 import os
 import multiprocessing
 import json
+
 import numpy as np
 import functools
 import logging
@@ -193,7 +194,13 @@ class FeaturizationInfo:
         # position features
         if "misc_features" in self.features_to_use:
             feature_names.extend(
-                ["position_diff", "abstract_count", "english_count", "same_language", "language_reliability_count"]
+                [
+                    "position_diff",
+                    "abstract_count",
+                    "english_count",
+                    "same_language",
+                    "language_reliability_count",
+                ]
             )
 
         # name count features
@@ -412,7 +419,10 @@ def _single_pair_featurize(work_input: Tuple[str, str], index: int = -1) -> Tupl
 
     features.extend(
         [
-            jaccard(signature_1.author_info_coauthor_blocks, signature_2.author_info_coauthor_blocks),
+            jaccard(
+                signature_1.author_info_coauthor_blocks,
+                signature_2.author_info_coauthor_blocks,
+            ),
             counter_jaccard(
                 signature_1.author_info_coauthor_n_grams,
                 signature_2.author_info_coauthor_n_grams,
@@ -445,7 +455,11 @@ def _single_pair_featurize(work_input: Tuple[str, str], index: int = -1) -> Tupl
     references_2 = set(paper_2.references)
     features.extend(
         [
-            counter_jaccard(paper_1.reference_details[0], paper_2.reference_details[0], denominator_max=5000),
+            counter_jaccard(
+                paper_1.reference_details[0],
+                paper_2.reference_details[0],
+                denominator_max=5000,
+            ),
             counter_jaccard(paper_1.reference_details[1], paper_2.reference_details[1]),
             counter_jaccard(paper_1.reference_details[2], paper_2.reference_details[2]),
             counter_jaccard(paper_1.reference_details[3], paper_2.reference_details[3]),
@@ -603,7 +617,11 @@ def many_pairs_featurize(
     labels = np.zeros(len(signature_pairs))
     pieces_of_work = []
     logger.info(f"Creating {len(signature_pairs)} pieces of work")
-    for i, pair in tqdm(enumerate(signature_pairs), desc="Creating work", disable=len(signature_pairs) <= 100000):
+    for i, pair in tqdm(
+        enumerate(signature_pairs),
+        desc="Creating work",
+        disable=len(signature_pairs) <= 100000,
+    ):
         labels[i] = pair[2]
 
         # negative labels are an indication of partial supervision

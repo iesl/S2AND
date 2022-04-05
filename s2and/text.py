@@ -1,7 +1,9 @@
 from typing import List, Union, Optional, Set, TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from s2and.data import NameCounts
+# if TYPE_CHECKING:
+#     from s2and.data import NameCounts
+
+from s2and.data import NameCounts
 
 import re
 import warnings
@@ -240,13 +242,28 @@ VENUE_STOP_WORDS = STOPWORDS.union(
     }
 )
 
-NAME_PREFIXES = {"dr", "prof", "professor", "mr", "miss", "mrs", "ms", "mx", "sir", "phd", "md", "doctor"}
+NAME_PREFIXES = {
+    "dr",
+    "prof",
+    "professor",
+    "mr",
+    "miss",
+    "mrs",
+    "ms",
+    "mx",
+    "sir",
+    "phd",
+    "md",
+    "doctor",
+}
 
 
 def prefix_dist(string_1: str, string_2: str) -> float:
     if string_1 == string_2:
         return 0.0
-    min_word, max_word = (string_1, string_2) if len(string_1) < len(string_2) else (string_2, string_1)
+    min_word, max_word = (
+        (string_1, string_2) if len(string_1) < len(string_2) else (string_2, string_1)
+    )
     min_len = len(min_word)
     for i in range(min_len, 0, -1):
         if min_word[:i] == max_word[:i]:
@@ -395,7 +412,10 @@ def cosine_sim(a: np.ndarray, b: np.ndarray) -> float:
 
 
 def get_text_ngrams(
-    text: Optional[str], use_unigrams: bool = False, use_bigrams: bool = True, stopwords: Optional[Set[str]] = STOPWORDS
+    text: Optional[str],
+    use_unigrams: bool = False,
+    use_bigrams: bool = True,
+    stopwords: Optional[Set[str]] = STOPWORDS,
 ) -> Counter:
     """
     Get character bigrams, trigrams, quadgrams, and optionally unigrams for a piece of text.
@@ -418,7 +438,13 @@ def get_text_ngrams(
         return Counter()
 
     if stopwords is not None:
-        text = " ".join([word for word in text.split(" ") if word not in stopwords and len(word) > 2])
+        text = " ".join(
+            [
+                word
+                for word in text.split(" ")
+                if word not in stopwords and len(word) > 2
+            ]
+        )
 
     unigrams = []  # type: ignore
     if use_unigrams:
@@ -440,11 +466,15 @@ def get_text_ngrams(
         lambda x: "".join(x),
         filter(lambda x: " " not in x, zip(text, text[1:], text[2:], text[3:])),
     )
-    ngrams = Counter(unigrams) | Counter(bigrams) | Counter(trigrams) | Counter(quadgrams)
+    ngrams = (
+        Counter(unigrams) | Counter(bigrams) | Counter(trigrams) | Counter(quadgrams)
+    )
     return ngrams
 
 
-def get_text_ngrams_words(text: Optional[str], stopwords: Set[str] = STOPWORDS) -> Counter:
+def get_text_ngrams_words(
+    text: Optional[str], stopwords: Set[str] = STOPWORDS
+) -> Counter:
     """
     Get word unigrams, bigrams, and trigrams for a piece of text.
 
@@ -461,7 +491,9 @@ def get_text_ngrams_words(text: Optional[str], stopwords: Set[str] = STOPWORDS) 
     """
     if text is None or len(text) == 0:
         return Counter()
-    text_split = [word for word in text.split() if word not in stopwords and len(word) > 1]
+    text_split = [
+        word for word in text.split() if word not in stopwords and len(word) > 1
+    ]
     unigrams = Counter(text_split)
     bigrams = map(
         lambda x: " ".join(x),
@@ -574,7 +606,10 @@ def equal_initial(
 
 
 def counter_jaccard(
-    counter_1: Counter, counter_2: Counter, default_val: float = NUMPY_NAN, denominator_max: float = np.inf
+    counter_1: Counter,
+    counter_2: Counter,
+    default_val: float = NUMPY_NAN,
+    denominator_max: float = np.inf,
 ) -> float:
     """
     Computes jaccard overlap between two Counters
@@ -653,7 +688,9 @@ def compute_block(name: str) -> str:
     return block
 
 
-def diff(value_1: Optional[float], value_2: Optional[float], default_val: float = NUMPY_NAN) -> float:
+def diff(
+    value_1: Optional[float], value_2: Optional[float], default_val: float = NUMPY_NAN
+) -> float:
     """
     Compute absolute difference between two values.
 
@@ -677,8 +714,8 @@ def diff(value_1: Optional[float], value_2: Optional[float], default_val: float 
 
 
 def name_counts(
-    counts_1: "NameCounts",
-    counts_2: "NameCounts",
+    counts_1: NameCounts,
+    counts_2: NameCounts,
 ) -> List[Union[int, float]]:
     """
     Gets name counts for first, last, and first_last names.
@@ -716,6 +753,8 @@ def name_counts(
     with warnings.catch_warnings():
         # np.max of 2 nans causes annoying warnings
         warnings.simplefilter("ignore", category=RuntimeWarning)
-        counts_min_max = list(np.nanmin(counts, axis=0)) + list(np.max([counts[0][:2], counts[1][:2]], axis=0))
+        counts_min_max = list(np.nanmin(counts, axis=0)) + list(
+            np.max([counts[0][:2], counts[1][:2]], axis=0)
+        )
 
     return counts_min_max

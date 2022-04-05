@@ -25,8 +25,8 @@ if CONFIG["main_data_dir"] == "absolute path of wherever you downloaded the data
 conf = CONFIG["main_data_dir"]
 
 if isinstance(conf, str):
-    if conf.startswith('<>'):
-        dirname = conf.split('/')[1]
+    if conf.startswith("<>"):
+        dirname = conf.split("/")[1]
         workingdir = PROJECT_ROOT_PATH
         while workingdir != "/":
             logger.info(f"Looking for model directory {dirname} in {workingdir}")

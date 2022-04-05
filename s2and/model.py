@@ -96,9 +96,7 @@ class Clusterer:
         self.n_jobs = n_jobs
         self.random_state = random_state
         self.use_cache = use_cache
-        self.use_default_constraints_as_supervision = (
-            use_default_constraints_as_supervision
-        )
+        self.use_default_constraints_as_supervision = use_default_constraints_as_supervision
         self.dont_merge_cluster_seeds = dont_merge_cluster_seeds
         if cluster_model is None:
             self.cluster_model = FastCluster(linkage="average")
@@ -115,9 +113,7 @@ class Clusterer:
         self.batch_size = batch_size
 
     @staticmethod
-    def filter_blocks(
-        block_dict: Dict[str, List[str]], num_to_keep: Optional[int] = None
-    ) -> Dict[str, List[str]]:
+    def filter_blocks(block_dict: Dict[str, List[str]], num_to_keep: Optional[int] = None) -> Dict[str, List[str]]:
         """
         Filter out blocks of size 1, as they are not useful or train/val
 
@@ -147,7 +143,7 @@ class Clusterer:
 
     def distance_matrix_helper(
         self,
-        block_dict: Dict,
+        block_dict: Dict[str, List[str]],
         dataset: ANDData,
         partial_supervision: Dict[Tuple[str, str], Union[int, float]],
         incremental_dont_use_cluster_seeds: bool = False,
@@ -175,15 +171,9 @@ class Clusterer:
                 # subtracting LARGE_INTEGER so many_pairs_featurize knows not to make features
                 label = np.nan
                 if (signatures[i], signatures[j]) in partial_supervision:
-                    label = (
-                        partial_supervision[(signatures[i], signatures[j])]
-                        - LARGE_INTEGER
-                    )
+                    label = partial_supervision[(signatures[i], signatures[j])] - LARGE_INTEGER
                 elif (signatures[j], signatures[i]) in partial_supervision:
-                    label = (
-                        partial_supervision[(signatures[j], signatures[i])]
-                        - LARGE_INTEGER
-                    )
+                    label = partial_supervision[(signatures[j], signatures[i])] - LARGE_INTEGER
                 elif self.use_default_constraints_as_supervision:
                     value = dataset.get_constraint(
                         signatures[i],
@@ -196,6 +186,8 @@ class Clusterer:
 
                 yield ((signatures[i], signatures[j], label), (i, j), block_key)
 
+    NPArrayType = type(np.array)
+
     def make_distance_matrices(
         self,
         block_dict: Dict[str, List[str]],
@@ -203,7 +195,7 @@ class Clusterer:
         partial_supervision: Dict[Tuple[str, str], Union[int, float]] = {},
         disable_tqdm: bool = False,
         incremental_dont_use_cluster_seeds: bool = False,
-    ) -> Dict[str, np.array]:
+    ) -> Dict[str, NPArrayType]:
         """
         Creates the distance matrices for the input blocks.
         Note: This function is much more complicated than it needs to be in an
@@ -236,9 +228,7 @@ class Clusterer:
             num_pairs += int(block_size * (block_size - 1) / 2)
             if isinstance(self.cluster_model, FastCluster):
                 # flattened pdist style
-                pairwise_proba = np.zeros(
-                    int(block_size * (block_size - 1) / 2), dtype=np.float16
-                )
+                pairwise_proba = np.zeros(int(block_size * (block_size - 1) / 2), dtype=np.float16)
             else:
                 pairwise_proba = np.zeros((block_size, block_size), dtype=np.float16)
             pairwise_probas[block_key] = pairwise_proba
@@ -297,21 +287,17 @@ class Clusterer:
             if np.any(predict_flag):
                 if self.nameless_classifier is not None:
                     batch_predictions[predict_flag] = (
-                        self.classifier.predict_proba(batch_features[predict_flag, :])[
-                            :, 0
-                        ]
+                        self.classifier.predict_proba(batch_features[predict_flag, :])[:, 0]
                         + self.nameless_classifier.predict_proba(
                             batch_nameless_features[predict_flag, :]  # type: ignore
                         )[:, 0]
                     ) / 2
                 else:
-                    batch_predictions[predict_flag] = self.classifier.predict_proba(
-                        batch_features[predict_flag, :]
-                    )[:, 0]
+                    batch_predictions[predict_flag] = self.classifier.predict_proba(batch_features[predict_flag, :])[
+                        :, 0
+                    ]
             if np.any(not_predict_flag):
-                batch_predictions[not_predict_flag] = (
-                    batch_labels[not_predict_flag] + LARGE_INTEGER
-                )
+                batch_predictions[not_predict_flag] = batch_labels[not_predict_flag] + LARGE_INTEGER
 
             logger.info("Starting to make matrices")
             for within_batch_index, (prediction, signature_pair) in tqdm(
@@ -322,15 +308,11 @@ class Clusterer:
             ):
                 block_key = blocks[within_batch_index]
                 if block_key != prev_block_key:
-                    block_key_start_index = blocks.index(block_key) + (
-                        batch_num * self.batch_size
-                    )
+                    block_key_start_index = blocks.index(block_key) + (batch_num * self.batch_size)
                     pairwise_proba = pairwise_probas[block_key]
 
                 if isinstance(self.cluster_model, FastCluster):
-                    index = (
-                        batch_num * self.batch_size + within_batch_index
-                    ) - block_key_start_index
+                    index = (batch_num * self.batch_size + within_batch_index) - block_key_start_index
 
                     pairwise_proba[index] = prediction
                 else:
@@ -387,10 +369,7 @@ class Clusterer:
             train_block_dict, val_block_dict, _ = dataset.split_cluster_signatures()
             # incremental setting uses all the signatures in train and val
             # block-wise split uses only validation set for building the clustering model
-            if (
-                dataset.unit_of_data_split == "time"
-                or dataset.unit_of_data_split == "signatures"
-            ):
+            if dataset.unit_of_data_split == "time" or dataset.unit_of_data_split == "signatures":
                 for block_key, signatures in train_block_dict.items():
                     if block_key in val_block_dict:
                         val_block_dict[block_key].extend(signatures)
@@ -400,9 +379,7 @@ class Clusterer:
             val_block_dict_list.append(val_block_dict)
 
             # block ground truth labels: cluster_to_signatures
-            val_cluster_to_signatures = dataset.construct_cluster_to_signatures(
-                val_block_dict
-            )
+            val_cluster_to_signatures = dataset.construct_cluster_to_signatures(val_block_dict)
             val_cluster_to_signatures_list.append(val_cluster_to_signatures)
 
             # distance matrix
@@ -422,9 +399,7 @@ class Clusterer:
             for val_block_dict, val_cluster_to_signatures, val_dists in zip(
                 val_block_dict_list, val_cluster_to_signatures_list, val_dists_list
             ):
-                pred_clusters, _ = self.predict(
-                    val_block_dict, dataset=None, dists=val_dists
-                )
+                pred_clusters, _ = self.predict(val_block_dict, dataset=None, dists=val_dists)
                 (
                     _,
                     _,
@@ -611,9 +586,7 @@ class Clusterer:
                         cluster_seeds_require_inverse[cluster_num] = []
                     cluster_seeds_require_inverse[cluster_num].append(signature_id)
                 for altered_cluster_num in altered_cluster_nums:
-                    signature_ids_for_cluster_num = cluster_seeds_require_inverse[
-                        altered_cluster_num
-                    ]
+                    signature_ids_for_cluster_num = cluster_seeds_require_inverse[altered_cluster_num]
 
                     # Note: incremental_dont_use_cluster_seeds is set to True, because at this stage
                     # of incremental clustering we are splitting up the claimed profiles that we received
@@ -626,9 +599,7 @@ class Clusterer:
                         incremental_dont_use_cluster_seeds=True,
                     )
                     if len(reclustered_output) > 1:
-                        for i, new_cluster_of_signatures in enumerate(
-                            reclustered_output.values()
-                        ):
+                        for i, new_cluster_of_signatures in enumerate(reclustered_output.values()):
                             new_cluster_num = str(altered_cluster_num) + f"_{i}"
                             recluster_map[new_cluster_num] = altered_cluster_num
                             for reclustered_signature_id in new_cluster_of_signatures:
@@ -680,26 +651,20 @@ class Clusterer:
                     ]
                 ) / 2
             else:
-                batch_predictions[predict_flag] = self.classifier.predict_proba(
-                    batch_features[predict_flag, :]
-                )[:, 0]
+                batch_predictions[predict_flag] = self.classifier.predict_proba(batch_features[predict_flag, :])[:, 0]
         if np.any(not_predict_flag):
-            batch_predictions[not_predict_flag] = (
-                batch_labels[not_predict_flag] + LARGE_INTEGER
-            )
+            batch_predictions[not_predict_flag] = batch_labels[not_predict_flag] + LARGE_INTEGER
 
         logger.info("Computing average distances for unassigned signatures")
-        signature_to_cluster_to_average_dist: Dict[
-            str, Dict[int, Tuple[float, int]]
-        ] = defaultdict(lambda: defaultdict(lambda: (0, 0)))
+        signature_to_cluster_to_average_dist: Dict[str, Dict[int, Tuple[float, int]]] = defaultdict(
+            lambda: defaultdict(lambda: (0, 0))
+        )
         for signature_pair, dist in zip(all_pairs, batch_predictions):
             unassigned_signature, assigned_signature, _ = signature_pair
             if assigned_signature not in cluster_seeds_require:
                 continue
             cluster_id = cluster_seeds_require[assigned_signature]
-            previous_average, previous_count = signature_to_cluster_to_average_dist[
-                unassigned_signature
-            ][cluster_id]
+            previous_average, previous_count = signature_to_cluster_to_average_dist[unassigned_signature][cluster_id]
             signature_to_cluster_to_average_dist[unassigned_signature][cluster_id] = (
                 (previous_average * previous_count + dist) / (previous_count + 1),
                 previous_count + 1,
@@ -728,14 +693,10 @@ class Clusterer:
 
                     if prevent_new_incompatibilities:
                         # restrict reclusterings that would add a new name incompatibility to the main cluster
-                        main_cluster_signatures = cluster_seeds_require_inverse[
-                            best_cluster_id
-                        ]
+                        main_cluster_signatures = cluster_seeds_require_inverse[best_cluster_id]
                         all_firsts = set(
                             [
-                                dataset.signatures[
-                                    signature_id
-                                ].author_info_first_normalized_without_apostrophe
+                                dataset.signatures[signature_id].author_info_first_normalized_without_apostrophe
                                 for signature_id in main_cluster_signatures
                             ]
                         )
@@ -749,9 +710,9 @@ class Clusterer:
                             ].author_info_first_normalized_without_apostrophe
                             match_found = False
                             for first_assigned in all_firsts:
-                                prefix = first_assigned.startswith(
-                                    first_unassigned
-                                ) or first_unassigned.startswith(first_assigned)
+                                prefix = first_assigned.startswith(first_unassigned) or first_unassigned.startswith(
+                                    first_assigned
+                                )
                                 known_alias = (
                                     first_assigned,
                                     first_unassigned,
@@ -844,9 +805,7 @@ class PairwiseModeler:
                 "num_leaves": scope.int(hp.qloguniform("num_leaves", 2, 7, 1)),
                 "colsample_bytree": hp.uniform("colsample_bytree", 0.5, 1),
                 "subsample": hp.uniform("subsample", 0.5, 1),
-                "min_child_samples": scope.int(
-                    hp.qloguniform("min_child_samples", 3, 9, 1)
-                ),
+                "min_child_samples": scope.int(hp.qloguniform("min_child_samples", 3, 9, 1)),
                 "min_child_weight": hp.loguniform("min_child_weight", -16, 5),
                 "reg_alpha": hp.loguniform("reg_alpha", -16, 2),
                 "reg_lambda": hp.loguniform("reg_lambda", -16, 2),
@@ -858,9 +817,7 @@ class PairwiseModeler:
             self.search_space = search_space
 
         self.monotone_constraints = monotone_constraints
-        if self.monotone_constraints is not None and isinstance(
-            self.estimator, lgb.LGBMClassifier
-        ):
+        if self.monotone_constraints is not None and isinstance(self.estimator, lgb.LGBMClassifier):
             self.estimator.set_params(monotone_constraints=self.monotone_constraints)
             self.estimator.set_params(monotone_constraints_method="advanced")
             self.search_space["monotone_penalty"] = hp.uniform("monotone_penalty", 0, 5)
@@ -915,9 +872,7 @@ class PairwiseModeler:
                 trials=self.hyperopt_trials_store,
                 rstate=np.random.RandomState(self.random_state),
             )
-            best_params = space_eval(
-                self.search_space, self.hyperopt_trials_store.argmin
-            )
+            best_params = space_eval(self.search_space, self.hyperopt_trials_store.argmin)
             self.best_params = {k: intify(v) for k, v in best_params.items()}
             self.estimator.set_params(**self.best_params)
         else:
@@ -1006,9 +961,7 @@ class VotingClassifier:
             Weighted average probability for each class per sample.
         """
         if self.voting == "hard":
-            raise AttributeError(
-                "predict_proba is not available when" " voting=%r" % self.voting
-            )
+            raise AttributeError("predict_proba is not available when" " voting=%r" % self.voting)
         avg = np.average(self._collect_probas(X), axis=0, weights=self.weights)
         return avg
 
@@ -1129,9 +1082,7 @@ class FastCluster(TransformerMixin, BaseEstimator):
                 "If you intended to pass in a distance matrix, it must be flattened (1-D)."
             )
         elif len(X.shape) > 2:
-            raise Exception(
-                "The input to fit can only be one-dimensional or two-dimensional."
-            )
+            raise Exception("The input to fit can only be one-dimensional or two-dimensional.")
         Z = linkage(X, self.linkage, preserve_input=self.preserve_input)
         self.labels_ = fcluster(Z, t=self.eps, criterion="distance")
         return self
@@ -1154,6 +1105,4 @@ class FastCluster(TransformerMixin, BaseEstimator):
         return self.labels_
 
     def transform(self, X: np.array):
-        raise Exception(
-            "FastCluster has no inductive mode. Use 'fit' or 'fit_transform' instead."
-        )
+        raise Exception("FastCluster has no inductive mode. Use 'fit' or 'fit_transform' instead.")

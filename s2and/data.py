@@ -1,4 +1,4 @@
-from typing import Optional, Union, Dict, List, Any, Tuple, Set, NamedTuple
+from typing import Optional, Union, Dict, List, Any, Tuple, Set
 
 import os
 import json
@@ -7,6 +7,7 @@ import pandas as pd
 import logging
 import pickle
 import multiprocessing
+from s2and.types import NameCounts, Signature, Author, Paper, MiniPaper
 from tqdm import tqdm
 
 from functools import reduce
@@ -38,76 +39,6 @@ from s2and.text import (
 
 logger = logging.getLogger("s2and")
 
-
-class NameCounts(NamedTuple):
-    first: Optional[int]
-    last: Optional[int]
-    first_last: Optional[int]
-    last_first_initial: Optional[int]
-
-
-class Signature(NamedTuple):
-    author_info_first: Optional[str]
-    author_info_first_normalized_without_apostrophe: Optional[str]
-    author_info_middle: Optional[str]
-    author_info_middle_normalized_without_apostrophe: Optional[str]
-    author_info_last_normalized: Optional[str]
-    author_info_last: str
-    author_info_suffix_normalized: Optional[str]
-    author_info_suffix: Optional[str]
-    author_info_first_normalized: Optional[str]
-    author_info_middle_normalized: Optional[str]
-    author_info_coauthors: Optional[List[str]]
-    author_info_coauthor_blocks: Optional[List[str]]
-    author_info_full_name: Optional[str]
-    author_info_affiliations: List[str]
-    author_info_affiliations_n_grams: Optional[Counter]
-    author_info_coauthor_n_grams: Optional[Counter]
-    author_info_email: Optional[str]
-    author_info_email_prefix_ngrams: Optional[Counter]
-    author_info_name_counts: Optional[NameCounts]
-    author_info_position: int
-    author_info_block: str
-    author_info_given_block: Optional[str]
-    author_info_estimated_gender: Optional[str]
-    author_info_estimated_ethnicity: Optional[str]
-    paper_id: int
-    sourced_author_source: Optional[str]
-    sourced_author_ids: List[str]
-    author_id: Optional[int]
-    signature_id: str
-
-
-class Author(NamedTuple):
-    author_name: str
-    position: int
-
-
-class Paper(NamedTuple):
-    title: str
-    has_abstract: Optional[bool]
-    in_signatures: Optional[bool]
-    is_english: Optional[bool]
-    is_reliable: Optional[bool]
-    predicted_language: Optional[str]
-    title_ngrams_words: Optional[Counter]
-    authors: List[Author]
-    venue: Optional[str]
-    journal_name: Optional[str]
-    title_ngrams_chars: Optional[Counter]
-    venue_ngrams: Optional[Counter]
-    journal_ngrams: Optional[Counter]
-    reference_details: Optional[Tuple[Counter, Counter, Counter, Counter]]
-    year: Optional[int]
-    references: Optional[List[int]]
-    paper_id: int
-
-
-class MiniPaper(NamedTuple):
-    title: str
-    venue: Optional[str]
-    journal_name: Optional[str]
-    authors: List[str]
 
 
 class ANDData:
@@ -221,7 +152,8 @@ class ANDData:
         for paper_id, paper in self.papers.items():
             self.papers[paper_id] = Paper(
                 title=paper["title"],
-                has_abstract=paper["abstract"] not in {"", None},  # todo: change how we do this given new metadata
+                has_abstract=paper["abstract"]
+                not in {"", None},  # todo: change how we do this given new metadata
                 in_signatures=None,
                 is_english=None,
                 is_reliable=None,
@@ -561,6 +493,7 @@ class ANDData:
                     last_first_initial_for_count = (
                         signature.author_info_last_normalized + " " + first_initial
                     ).strip()
+
                     counts = NameCounts(
                         first=self.first_dict.get(
                             signature.author_info_first_normalized, 1
