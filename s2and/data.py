@@ -372,7 +372,7 @@ class ANDData:
         -------
         nothing, modifies self.signatures
         """
-        for signature_id, signature in tqdm(self.signatures.items(), desc="Preprocessing signatures"):
+        for signature_id, signature in tqdm(self.signatures.items(), desc="Preprocessing signatures", disable=True):
             # our normalization scheme is to normalize first and middle separately,
             # join them, then take the first token of the combined join
             first_normalized = normalize_text(signature.author_info_first or "")
@@ -1363,7 +1363,7 @@ def preprocess_papers_parallel(papers_dict: Dict, n_jobs: int, preprocess: bool)
                     output[key] = value
                     pbar.update()
     else:
-        for item in tqdm(papers_dict.items(), total=len(papers_dict), desc="Preprocessing papers 1/2"):
+        for item in tqdm(papers_dict.items(), total=len(papers_dict), desc="Preprocessing papers 1/2", disable=True):
             result = preprocess_paper_1(item)
             output[result[0]] = result[1]
 
@@ -1394,12 +1394,12 @@ def preprocess_papers_parallel(papers_dict: Dict, n_jobs: int, preprocess: bool)
         if n_jobs > 1:
             with multiprocessing.Pool(processes=n_jobs) as p:
                 _max = len(input_2)
-                with tqdm(total=_max, desc="Preprocessing papers 2/2") as pbar:
+                with tqdm(total=_max, desc="Preprocessing papers 2/2", disable=True) as pbar:
                     for key, value in p.imap(preprocess_paper_2, input_2, 100):
                         output[key] = value
                         pbar.update()
         else:
-            for item in tqdm(input_2, total=len(input_2), desc="Preprocessing papers 2/2"):
+            for item in tqdm(input_2, total=len(input_2), desc="Preprocessing papers 2/2", disable=True):
                 result = preprocess_paper_2(item)
                 output[result[0]] = result[1]
 

@@ -193,7 +193,7 @@ class Clusterer:
         block_dict: Dict[str, List[str]],
         dataset: ANDData,
         partial_supervision: Dict[Tuple[str, str], Union[int, float]] = {},
-        disable_tqdm: bool = False,
+        disable_tqdm: bool = True,
         incremental_dont_use_cluster_seeds: bool = False,
     ) -> Dict[str, NPArrayType]:
         """

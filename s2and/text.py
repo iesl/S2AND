@@ -613,6 +613,11 @@ def counter_jaccard(
     if len(counter_1) == 0 or len(counter_2) == 0:
         return default_val
 
+    # print(counter_1)
+    # print("-----------")
+    # print(counter_2)
+    # print("\n\n")
+
     intersection_sum = sum((counter_1 & counter_2).values())
     union_sum = sum(counter_1.values()) + sum(counter_2.values()) - intersection_sum
     score = intersection_sum / min(union_sum, denominator_max)

@@ -1,5 +1,7 @@
 from typing import Tuple, List, Union, Dict, Callable, Any, Optional
 
+# from nptyping import NDArray, Float, get_type
+
 import os
 import multiprocessing
 import json
@@ -595,6 +597,14 @@ def many_pairs_featurize(
     global_dataset = dataset  # type: ignore
 
     cached_features: Dict[str, Any] = {"features": {}}
+
+    def maybe_cache(sigpair_index: int, feature):
+        if use_cache:
+            logger.info("Using cache")
+            cache_key = featurizer_info.feature_cache_key(signature_pairs[sigpair_index])
+            cached_features["features"][cache_key] = feature
+            pass
+
     cache_changed = False
     if use_cache:
         logger.info("Loading cache...")
@@ -613,8 +623,13 @@ def many_pairs_featurize(
             cached_features["features"] = {}
             cached_features["features_to_use"] = featurizer_info.features_to_use
 
+
     features = np.ones((len(signature_pairs), NUM_FEATURES)) * (-LARGE_INTEGER)
     labels = np.zeros(len(signature_pairs))
+    # ftype = NDArray.type_of(features)
+    # ltype = NDArray.type_of(labels)
+    # print(f"ftype={ftype}, ltype={ltype}")
+    #   == ftype=NDArray[(6, 39), Float[64]], ltype=NDArray[(6,), Float[64]]
     pieces_of_work = []
     logger.info(f"Creating {len(signature_pairs)} pieces of work")
     for i, pair in tqdm(
@@ -645,45 +660,42 @@ def many_pairs_featurize(
 
     logger.info("Created pieces of work")
 
-    indices_to_use = set()
-    for feature_name in featurizer_info.features_to_use:
-        indices_to_use.update(featurizer_info.feature_group_to_index[feature_name])
-    indices_to_use: List[int] = sorted(list(indices_to_use))  # type: ignore
+    indices_to_use_set = set()
 
+    for feature_name in featurizer_info.features_to_use:
+        indices_to_use_set.update(featurizer_info.feature_group_to_index[feature_name])
+    indices_to_use: List[int] = sorted(list(indices_to_use_set))  # type: ignore
+
+    nameless_indices_to_use: List[int] = []
     if nameless_featurizer_info:
-        nameless_indices_to_use = set()
+        nameless_indices_to_use_set = set()
         for feature_name in nameless_featurizer_info.features_to_use:
-            nameless_indices_to_use.update(nameless_featurizer_info.feature_group_to_index[feature_name])
-        nameless_indices_to_use: List[int] = sorted(list(nameless_indices_to_use))  # type: ignore
+            nameless_indices_to_use_set.update(nameless_featurizer_info.feature_group_to_index[feature_name])
+        nameless_indices_to_use = sorted(list(nameless_indices_to_use_set))  # type: ignore
 
     if cache_changed:
-        if n_jobs > 1:
+        if n_jobs > 1: # if False: to disable parallelism (for profiling)
             logger.info(f"Cached changed, doing {len(pieces_of_work)} work in parallel")
             with multiprocessing.Pool(processes=n_jobs if len(pieces_of_work) > 1000 else 1) as p:
                 _max = len(pieces_of_work)
-                with tqdm(total=_max, desc="Doing work", disable=_max <= 10000) as pbar:
-                    for (feature_output, index) in p.imap(
-                        functools.partial(parallel_helper, worker_func=_single_pair_featurize),
-                        pieces_of_work,
-                        min(chunk_size, max(1, int((_max / n_jobs) / 2))),
-                    ):
-                        # Write to in memory cache if we're not skipping
-                        if use_cache:
-                            cached_features["features"][
-                                featurizer_info.feature_cache_key(signature_pairs[index])
-                            ] = feature_output
-                        features[index, :] = feature_output
-                        pbar.update()
+
+                for (feature_output, index) in p.imap(
+                    functools.partial(parallel_helper, worker_func=_single_pair_featurize),
+                    pieces_of_work,
+                    min(chunk_size, max(1, int((_max / n_jobs) / 2))),
+                ):
+                    # Write to in memory cache if we're not skipping
+                    maybe_cache(index, feature_output)
+                    features[index, :] = feature_output
         else:
             logger.info(f"Cached changed, doing {len(pieces_of_work)} work in serial")
             partial_func = functools.partial(parallel_helper, worker_func=_single_pair_featurize)
-            for piece in tqdm(pieces_of_work, total=len(pieces_of_work), desc="Doing work"):
+            # for piece in tqdm(pieces_of_work, total=len(pieces_of_work), desc="Doing work"):
+            for piece in pieces_of_work:
                 result = partial_func(piece)
-                if use_cache:
-                    cached_features["features"][featurizer_info.feature_cache_key(signature_pairs[result[1]])] = result[
-                        0
-                    ]
-                features[result[1], :] = result[0]
+                feature_output, index = result
+                maybe_cache(index, feature_output)
+                features[index, :] = feature_output
         logger.info("Work completed")
 
     if use_cache and cache_changed:

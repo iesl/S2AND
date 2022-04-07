@@ -12,7 +12,6 @@ class NameCounts(NamedTuple):
     first_last: Optional[int]
     last_first_initial: Optional[int]
 
-
 class Signature(NamedTuple):
     author_info_first: Optional[str]
     author_info_first_normalized_without_apostrophe: Optional[str]
