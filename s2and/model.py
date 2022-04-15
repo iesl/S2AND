@@ -1,16 +1,21 @@
 from __future__ import annotations
 
+import logging
+logger = logging.getLogger("s2and")
+
+
 from s2and.eval import b3_precision_recall_fscore
 from s2and.featurizer import FeaturizationInfo, many_pairs_featurize
 from s2and.data import ANDData
 from s2and.consts import LARGE_INTEGER, DEFAULT_CHUNK_SIZE
+
 
 from typing import Dict, Optional, Any, Union, List, Tuple
 from collections import defaultdict
 import warnings
 from functools import partial
 from tqdm import tqdm
-import logging
+
 import copy
 import math
 
@@ -20,13 +25,13 @@ from hyperopt import hp, fmin, tpe, Trials, space_eval
 from hyperopt.pyll import scope
 from fastcluster import linkage
 
+
 import lightgbm as lgb
 from sklearn.metrics import roc_auc_score
 from sklearn.base import clone
 from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.exceptions import EfficiencyWarning
 
-logger = logging.getLogger("s2and")
 
 
 class Clusterer:

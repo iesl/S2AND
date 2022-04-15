@@ -1,4 +1,4 @@
-from typing import List, Union, Optional, Set
+from typing import Any, List, Union, Optional, Set
 
 from s2and.data import NameCounts
 
@@ -19,7 +19,6 @@ from strsimpy.metric_lcs import MetricLCS
 from s2and.consts import NUMPY_NAN, FASTTEXT_PATH
 from s2and.file_cache import cached_path
 
-FASTTEXT_MODEL = fasttext.load_model(cached_path(FASTTEXT_PATH))
 
 RE_NORMALIZE_WHOLE_NAME = re.compile(r"[^a-zA-Z\s]+")
 
@@ -275,7 +274,18 @@ TEXT_FUNCTIONS = [
 ]
 
 
+FASTTEXT_MODEL: Optional[Any] = None
+
+
+def load_fasttext_model():
+    global FASTTEXT_MODEL
+    if FASTTEXT_MODEL is None:
+        FASTTEXT_MODEL = fasttext.load_model(cached_path(FASTTEXT_PATH))
+
+
 def detect_language(text: str):
+    load_fasttext_model()
+
     if len(text.split()) <= 1:
         return (False, False, "un")
 

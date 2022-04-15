@@ -16,9 +16,9 @@ from functools import reduce
 from collections import defaultdict
 
 import numpy as np
-import shap
 import matplotlib.pyplot as plt
 import seaborn as sns
+
 
 from sklearn.metrics import roc_curve, auc
 from sklearn.metrics import precision_recall_fscore_support
@@ -28,12 +28,12 @@ from sklearn.calibration import CalibratedClassifierCV
 import copy
 from tqdm import tqdm
 
+
 from s2and.featurizer import many_pairs_featurize
 
 logger = logging.getLogger("s2and")
 
 sns.set(context="talk")
-
 
 def cluster_eval(
     dataset: "ANDData",
@@ -426,6 +426,10 @@ def facet_eval(
         signature_lookup,
     )
 
+from shap import (
+    TreeExplainer,
+    summary_plot
+)
 
 def pairwise_eval(
     X: np.array,
@@ -539,21 +543,21 @@ def pairwise_eval(
             shap_values_all = []
             for c in classifier.estimators:
                 if isinstance(c, CalibratedClassifierCV):
-                    shap_values_all.append(shap.TreeExplainer(c.base_estimator).shap_values(X)[1])
+                    shap_values_all.append(TreeExplainer(c.base_estimator).shap_values(X)[1])
                 else:
-                    shap_values_all.append(shap.TreeExplainer(c).shap_values(X)[1])
+                    shap_values_all.append(TreeExplainer(c).shap_values(X)[1])
             shap_values = [np.mean(shap_values_all, axis=0)]
         elif nameless_classifier is not None:
             shap_values = []
             for c, d in [(classifier, X), (nameless_classifier, nameless_X)]:
                 if isinstance(classifier, CalibratedClassifierCV):
-                    shap_values.append(shap.TreeExplainer(c.base_estimator).shap_values(d)[1])
+                    shap_values.append(TreeExplainer(c.base_estimator).shap_values(d)[1])
                 else:
-                    shap_values.append(shap.TreeExplainer(c).shap_values(d)[1])
+                    shap_values.append(TreeExplainer(c).shap_values(d)[1])
         elif isinstance(classifier, CalibratedClassifierCV):
-            shap_values = shap.TreeExplainer(classifier.base_estimator).shap_values(X)[1]
+            shap_values = TreeExplainer(classifier.base_estimator).shap_values(X)[1]
         else:
-            shap_values = shap.TreeExplainer(classifier).shap_values(X)[1]
+            shap_values = TreeExplainer(classifier).shap_values(X)[1]
 
         if isinstance(shap_values, list):
             for i, (shap_value, feature_names, d) in enumerate(
@@ -565,7 +569,7 @@ def pairwise_eval(
             ):
                 assert feature_names is not None, "neither feature_names should be None here"
                 plt.figure(2 + i)
-                shap.summary_plot(
+                summary_plot(
                     shap_value,
                     d,
                     plot_type=shap_plot_type,
@@ -580,7 +584,7 @@ def pairwise_eval(
                 plt.close()
         else:
             plt.figure(2)
-            shap.summary_plot(
+            summary_plot(
                 shap_values,
                 X,
                 plot_type=shap_plot_type,
@@ -984,15 +988,15 @@ def claims_eval(
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 clusterer.classifier.booster_.params["objective"] = "binary"
-                shap_output = shap.TreeExplainer(clusterer.classifier).shap_values(features)[1]
+                shap_output = TreeExplainer(clusterer.classifier).shap_values(features)[1]
                 clusterer.nameless_classifier.booster_.params["objective"] = "binary"  # type: ignore
-                shap_output_nameless = shap.TreeExplainer(clusterer.nameless_classifier).shap_values(nameless_features)[
+                shap_output_nameless = TreeExplainer(clusterer.nameless_classifier).shap_values(nameless_features)[
                     1
                 ]
 
                 title = f"{id1}-{id2}"
                 plt.figure(1)
-                shap.summary_plot(
+                summary_plot(
                     shap_output,
                     features,
                     plot_type="dot",
@@ -1007,7 +1011,7 @@ def claims_eval(
                 plt.close()
 
                 plt.figure(1)
-                shap.summary_plot(
+                summary_plot(
                     shap_output_nameless,
                     nameless_features,
                     plot_type="dot",

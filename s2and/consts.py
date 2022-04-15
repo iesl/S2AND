@@ -17,9 +17,7 @@ with open(CONFIG_LOCATION) as _json_file:
     CONFIG = json.load(_json_file)
 
 if CONFIG["main_data_dir"] == "absolute path of wherever you downloaded the data to":
-    logger.warning(
-        "You haven't set `main_data_dir` in data/path_config.json! Using data/ as default data directory."
-    )
+    logger.warning("You haven't set `main_data_dir` in data/path_config.json! Using data/ as default data directory.")
     CONFIG["main_data_dir"] = os.path.join(PROJECT_ROOT_PATH, "data")
 
 conf = CONFIG["main_data_dir"]
@@ -29,7 +27,7 @@ if isinstance(conf, str):
         dirname = conf.split("/")[1]
         workingdir = PROJECT_ROOT_PATH
         while workingdir != "/":
-            logger.info(f"Looking for model directory {dirname} in {workingdir}")
+            logger.debug(f"Looking for model directory {dirname} in {workingdir}")
             maybe_model_dir = os.path.join(workingdir, dirname)
             if os.path.exists(maybe_model_dir):
                 logger.info(f"Using model directory {maybe_model_dir}")
@@ -41,9 +39,8 @@ if isinstance(conf, str):
             logger.warn(f"Could not find model data dir {dirname}")
 
 
-assert os.path.exists(
-    CONFIG["main_data_dir"]
-), "The `main_data_dir` specified in data/path_config.json doesn't exist."
+assert os.path.exists(CONFIG["main_data_dir"]), "The `main_data_dir` specified in data/path_config.json doesn't exist."
+
 
 # paths
 NAME_COUNTS_PATH = os.path.join(CONFIG["main_data_dir"], "name_counts.pickle")

@@ -39,7 +39,6 @@ from s2and.text import (
 
 logger = logging.getLogger("s2and")
 
-
 class ANDData:
     """
     The main class for holding our representation of an author disambiguation dataset

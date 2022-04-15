@@ -14,6 +14,7 @@ from collections import Counter
 from tqdm import tqdm
 
 from s2and.data import ANDData
+
 from s2and.consts import (
     CACHE_ROOT,
     NUMPY_NAN,
@@ -623,7 +624,6 @@ def many_pairs_featurize(
             cached_features["features"] = {}
             cached_features["features_to_use"] = featurizer_info.features_to_use
 
-
     features = np.ones((len(signature_pairs), NUM_FEATURES)) * (-LARGE_INTEGER)
     labels = np.zeros(len(signature_pairs))
     # ftype = NDArray.type_of(features)
@@ -674,7 +674,7 @@ def many_pairs_featurize(
         nameless_indices_to_use = sorted(list(nameless_indices_to_use_set))  # type: ignore
 
     if cache_changed:
-        if n_jobs > 1: # if False: to disable parallelism (for profiling)
+        if n_jobs > 1:  # if False: to disable parallelism (for profiling)
             logger.info(f"Cached changed, doing {len(pieces_of_work)} work in parallel")
             with multiprocessing.Pool(processes=n_jobs if len(pieces_of_work) > 1000 else 1) as p:
                 _max = len(pieces_of_work)
