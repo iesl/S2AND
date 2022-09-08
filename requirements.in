@@ -19,13 +19,13 @@ seaborn==0.11.2
 nptyping==1.4.4
 
 ## Not dependant on numpy/scikit-learn versions
-tqdm==4.63.1
+tqdm==4.64.0
 strsimpy==0.2.1
 jellyfish==0.9.0
 
 # For CI and testing
-pytest==7.1.1
+pytest==7.1.2
 pytest-cov==3.0.0
-flake8==3.8.3
-black==22.3.0
-mypy==0.942
+flake8==4.0.1
+black==22.6.0
+mypy==0.961
