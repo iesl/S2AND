@@ -10,15 +10,15 @@ testpaths = [
 
 [tool.pyright]
 
-include = ["s2and/*"]
+include = ["src/*"]
 exclude = [
         "**/__pycache__"
         ]
-ignore = ["data", "scripts", "s2and.egg-info"]
+
+ignore = ["data", "scripts"]
 
 useLibraryCodeForTypes = true
 typeCheckingMode = "basic" # vs strict/none
-
 
 executionEnvironments = [
 ]

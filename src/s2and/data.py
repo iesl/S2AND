@@ -121,6 +121,7 @@ class ANDData:
         n_jobs: int = 1,
         preprocess: bool = True,
         name_tuples: Set[Tuple[str, str]] = None,
+        fasttext_model: Any = None,
     ):
         if mode == "train":
             if train_blocks is not None and block_type != "original":
@@ -259,6 +260,7 @@ class ANDData:
         self.pair_sampling_balanced_homonym_synonym = pair_sampling_balanced_homonym_synonym
         self.all_test_pairs_flag = all_test_pairs_flag
         self.random_seed = random_seed
+        self.fasttext_model = fasttext_model
 
         if self.clusters is None:
             self.signature_to_cluster_id = None
@@ -321,7 +323,7 @@ class ANDData:
             self.name_tuples = name_tuples
 
         logger.info("preprocessing papers")
-        self.papers = preprocess_papers_parallel(self.papers, self.n_jobs, self.preprocess)
+        self.papers = preprocess_papers_parallel(self.papers, self.n_jobs, self.preprocess, self.fasttext_model)
         logger.info("preprocessed papers")
 
         logger.info("preprocessing signatures")
@@ -1238,7 +1240,7 @@ class ANDData:
             return pairs
 
 
-def preprocess_paper_1(item: Tuple[str, Paper]) -> Tuple[str, Paper]:
+def preprocess_paper_1(item: Tuple[str, Paper], fasttext_model: Any) -> Tuple[str, Paper]:
     """
     helper function to perform most of the preprocessing of a paper
 
@@ -1256,7 +1258,7 @@ def preprocess_paper_1(item: Tuple[str, Paper]) -> Tuple[str, Paper]:
     key, paper = item
 
     if paper.in_signatures:
-        is_reliable, is_english, predicted_language = detect_language(paper.title)
+        is_reliable, is_english, predicted_language = detect_language(paper.title, fasttext_model)
         paper = paper._replace(
             is_english=is_english,
             predicted_language=predicted_language,
@@ -1333,7 +1335,7 @@ def preprocess_paper_2(item: Tuple[str, Paper, List[MiniPaper]]) -> Tuple[str, P
     return (key, paper)
 
 
-def preprocess_papers_parallel(papers_dict: Dict, n_jobs: int, preprocess: bool) -> Dict:
+def preprocess_papers_parallel(papers_dict: Dict, n_jobs: int, preprocess: bool, fasttext_model: Any) -> Dict:
     """
     helper function to preprocess papers
 
@@ -1363,7 +1365,7 @@ def preprocess_papers_parallel(papers_dict: Dict, n_jobs: int, preprocess: bool)
                     pbar.update()
     else:
         for item in tqdm(papers_dict.items(), total=len(papers_dict), desc="Preprocessing papers 1/2", disable=True):
-            result = preprocess_paper_1(item)
+            result = preprocess_paper_1(item,fasttext_model)
             output[result[0]] = result[1]
 
     if preprocess:
