@@ -1,3 +1,4 @@
+from typing import Optional, Any
 import numpy as np
 from pathlib import Path
 import os
@@ -49,6 +50,7 @@ if not os.path.exists(NAME_COUNTS_PATH):
 
 FASTTEXT_PATH = os.path.join(CONFIG["main_data_dir"], "lid.176.bin")
 if not os.path.exists(FASTTEXT_PATH):
+    logger.info(f"Not Found: FastText model {FASTTEXT_PATH}/lid.176.bin")
     FASTTEXT_PATH = "https://s3-us-west-2.amazonaws.com/ai2-s2-research-public/s2and-release/lid.176.bin"
 
 # feature caching related consts

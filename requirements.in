@@ -26,6 +26,6 @@ jellyfish==0.9.0
 # For CI and testing
 pytest==7.1.2
 pytest-cov==3.0.0
-flake8==4.0.1
+flake8==3.8.3
 black==22.6.0
-mypy==0.961
+mypy==0.942

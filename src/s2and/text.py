@@ -10,7 +10,6 @@ from numpy.linalg import norm
 from collections import Counter
 
 from text_unidecode import unidecode
-import fasttext
 import pycld2 as cld2
 import jellyfish
 from strsimpy.metric_lcs import MetricLCS
@@ -18,7 +17,6 @@ from strsimpy.metric_lcs import MetricLCS
 
 from s2and.consts import NUMPY_NAN, FASTTEXT_PATH
 from s2and.file_cache import cached_path
-
 
 RE_NORMALIZE_WHOLE_NAME = re.compile(r"[^a-zA-Z\s]+")
 
@@ -274,30 +272,19 @@ TEXT_FUNCTIONS = [
 ]
 
 
-FASTTEXT_MODEL: Optional[Any] = None
 
-
-def load_fasttext_model():
-    global FASTTEXT_MODEL
-    if FASTTEXT_MODEL is None:
-        FASTTEXT_MODEL = fasttext.load_model(cached_path(FASTTEXT_PATH))
-
-
-def detect_language(text: str):
-    load_fasttext_model()
-
+def detect_language(text: str, fasttext_model: Any):
     if len(text.split()) <= 1:
         return (False, False, "un")
 
-    # fasttext
     isuppers = [c.isupper() for c in text if c.isalpha()]
     if len(isuppers) == 0:
         return (False, False, "un")
     elif sum(isuppers) / len(isuppers) > 0.9:
-        fasttext_pred = FASTTEXT_MODEL.predict(text.lower().replace("\n", " "))
+        fasttext_pred = fasttext_model.predict(text.lower().replace("\n", " "))
         predicted_language_ft = fasttext_pred[0][0].split("__")[-1]
     else:
-        fasttext_pred = FASTTEXT_MODEL.predict(text.replace("\n", " "))
+        fasttext_pred = fasttext_model.predict(text.replace("\n", " "))
         predicted_language_ft = fasttext_pred[0][0].split("__")[-1]
 
     # cld2

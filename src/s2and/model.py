@@ -1111,3 +1111,8 @@ class FastCluster(TransformerMixin, BaseEstimator):
 
     def transform(self, X: np.array):
         raise Exception("FastCluster has no inductive mode. Use 'fit' or 'fit_transform' instead.")
+
+
+import fasttext
+def load_fasttext_model() -> Optional[Any]:
+    return fasttext.load_model(cached_path(FASTTEXT_PATH))
